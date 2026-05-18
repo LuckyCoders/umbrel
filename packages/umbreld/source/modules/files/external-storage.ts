@@ -10,6 +10,8 @@ import PQueue from 'p-queue'
 
 import {isRaspberryPi} from '../system/system.js'
 
+import {startExternalStoragePowerMonitor} from './external-storage-power-monitor.js'
+
 import type Umbreld from '../../index.js'
 
 type BlockDevice = {
@@ -92,6 +94,7 @@ export default class ExternalStorage {
 	logger: Umbreld['logger']
 	#mountQueue = new PQueue({concurrency: 1})
 	#removeDeviceChangeListener?: () => void
+	#stopPowerMonitor?: () => void
 	formatJobs: Set<string> = new Set()
 
 	constructor(umbreld: Umbreld) {
@@ -133,6 +136,10 @@ export default class ExternalStorage {
 			this.logger.log('Device change detected')
 			await this.#mountExternalDevices()
 		})
+
+		if (await isRaspberryPi()) {
+			this.#stopPowerMonitor = startExternalStoragePowerMonitor(this.#umbreld, this)
+		}
 	}
 
 	// Remove listener
@@ -143,6 +150,8 @@ export default class ExternalStorage {
 
 		this.logger.log('Stopping external storage')
 		this.#removeDeviceChangeListener?.()
+		this.#stopPowerMonitor?.()
+		this.#stopPowerMonitor = undefined
 
 		// Unmount all external devices
 		const ONE_SECOND = 1000
