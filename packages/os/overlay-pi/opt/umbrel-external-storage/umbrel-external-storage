@@ -2,15 +2,17 @@
 
 set -euo pipefail
 
-# This script will:
-# - Look for external storage devices
-# - Check if they contain an Umbrel install
-# - If yes
-# - - Mount it
-# - If no
-# - - Format it
-# - - Mount it
-# - - Install Umbrel on it
+# This script ONLY runs when the user has opted in via umbrel-allow-external-format on
+# the SD card boot partition. It migrates Umbrel's data directory to a USB drive.
+#
+# Normal USB drives (media, backups, etc.) are mounted by umbreld under Files → External
+# and must not be handled here.
+#
+# When opted in, this script will:
+# - Look for a single external storage device
+# - Check if it contains an Umbrel install
+# - If yes, mount it
+# - If no, format it (only with opt-in), mount it, and install Umbrel on it
 # - Bind mount the external installation on top of the local installation
 
 UMBREL_ROOT="/home/umbrel/umbrel"
@@ -238,6 +240,14 @@ main () {
     echo "This script should only run when umbrelOS boots from an SD card, exiting..."
     exit
   fi
+
+  if ! is_external_format_explicitly_allowed; then
+    echo "No opt-in for Umbrel external data disk (umbrel-allow-external-format); skipping."
+    echo "USB drives are mounted by umbreld under Files → External."
+    exit 0
+  fi
+
+  echo "Opt-in detected: setting up external drive as Umbrel data disk..."
 
   no_of_block_devices=$(list_block_devices | wc -l)
 
