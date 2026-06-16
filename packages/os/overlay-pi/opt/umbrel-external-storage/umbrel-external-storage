@@ -8,9 +8,7 @@ set -euo pipefail
 # - If yes
 # - - Mount it
 # - If no
-# - - Format it
-# - - Mount it
-# - - Install Umbrel on it
+# - - Leave it untouched
 # - Bind mount the external installation on top of the local installation
 
 UMBREL_ROOT="/home/umbrel/umbrel"
@@ -108,48 +106,21 @@ is_partition_ext4 () {
   blkid -o value -s TYPE "${partition_path}" | grep --quiet '^ext4$'
 }
 
-# Wipes a block device and reformats it with a single EXT4 partition
-format_block_device () {
-  device="${1}"
-  device_path="/dev/${device}"
-  partition_path=$(get_first_partition_path "${device_path}")
-  wipefs -a "${device_path}"
-  parted --script "${device_path}" mklabel gpt
-  parted --script "${device_path}" mkpart primary ext4 0% 100%
-  # We need to run sync here to make sure the filesystem is reflecting the
-  # the latest changes in /dev/*
-  sync
-  mkfs.ext4 -F -L umbrel "${partition_path}"
-}
-
 # Mounts the device given in the first argument at $MOUNT_POINT
 mount_partition () {
   partition_path="${1}"
+  mount_options="${2:-}"
   mkdir -p "${MOUNT_POINT}"
-  mount "${partition_path}" "${MOUNT_POINT}"
+  if [[ -n "${mount_options}" ]]; then
+    mount -o "${mount_options}" "${partition_path}" "${MOUNT_POINT}"
+  else
+    mount "${partition_path}" "${MOUNT_POINT}"
+  fi
 }
 
 # Unmounts $MOUNT_POINT
 unmount_partition () {
   umount "${MOUNT_POINT}"
-}
-
-# Formats and sets up a new device
-setup_new_device () {
-  block_device="${1}"
-  partition_path="${2}"
-
-  echo "Formatting device..."
-  format_block_device $block_device
-
-  echo "Mounting partition..."
-  mount_partition "${partition_path}"
-
-  echo "Creating Umbrel data directory on external storage..."
-  mkdir -p "${EXTERNAL_UMBREL_ROOT}"
-
-  echo "Touching dotfile on external storage so we recognise this device in the future..."
-  touch "${EXTERNAL_UMBREL_ROOT}"/.umbrel
 }
 
 # Copy Docker data dir to external storage
@@ -164,7 +135,7 @@ copy_docker_to_external_storage () {
 main () {
   echo "Running external storage mount script..."
   check_root
-  check_dependencies sed wipefs parted mount sync umount
+  check_dependencies sed mount sync umount blkid fsck.ext4
 
   if [[ "$(running_off_sdcard)" == "false" ]]
   then
@@ -229,6 +200,25 @@ main () {
   if is_partition_ext4 "${partition_path}" ; then
     echo "Yes, it is ext4"
 
+    echo "Checking if device contains an Umbrel install..."
+    mount_partition "${partition_path}" "ro,noload" || {
+      echo "Error mounting partition read-only"
+      echo "Refusing to repair or format an unrecognised device, exiting without doing anything..."
+      exit
+    }
+
+    if [[ -f "${EXTERNAL_UMBREL_ROOT}"/.umbrel ]]; then
+      echo "Yes, it contains an Umbrel install"
+      echo "Unmounting read-only probe mount..."
+      unmount_partition
+    else
+      echo "No, it doesn't contain an Umbrel install"
+      echo "Unmounting partition..."
+      unmount_partition
+      echo "Refusing to format an unrecognised device, exiting without doing anything..."
+      exit
+    fi
+
     echo "Checking filesystem for corruption..."
     # Swallow non-zero exit because successful recovery returns 1 and
     # we still want to attempt a best effort boot on a failed recovery.
@@ -240,20 +230,10 @@ main () {
       exit 1
     }
 
-    echo "Checking if device contains an Umbrel install..."
-
-    if [[ -f "${EXTERNAL_UMBREL_ROOT}"/.umbrel ]]; then
-      echo "Yes, it contains an Umbrel install"
-    else
-      echo "No, it doesn't contain an Umbrel install"
-      echo "Unmounting partition..."
-      unmount_partition
-      setup_new_device $block_device $partition_path
-    fi
-
   else
     echo "No, it's not ext4"
-    setup_new_device $block_device $partition_path
+    echo "Refusing to format an unrecognised device, exiting without doing anything..."
+    exit
   fi
 
   if [[ ! -d "${EXTERNAL_DOCKER_DIR}" ]]; then
