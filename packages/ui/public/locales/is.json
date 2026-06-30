@@ -1254,5 +1254,7 @@
   "wifi-no-networks-message": "Engin Wi‑Fi net fundust",
   "wifi-searching": "Leita að Wi‑Fi netum...",
   "wifi-unsupported-device-description": "Wi‑Fi er ekki stutt á þessu tæki. Þetta gæti stafað af vantar eða ósamhæfum þráðlausum netbúnaði.",
-  "wifi-view-networks": "Skoða net"
+  "wifi-view-networks": "Skoða net",
+  "notifications.external-storage-power-fault.title": "External drive unmounted (power issue)",
+  "notifications.external-storage-power-fault.description": "Your Raspberry Pi reported low voltage or USB storage errors. External drives were unmounted to protect your data. Use a powered USB hub or a drive with its own power supply, then reconnect the drive."
 }

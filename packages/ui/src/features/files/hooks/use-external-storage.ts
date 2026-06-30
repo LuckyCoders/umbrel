@@ -1,5 +1,4 @@
 import {keepPreviousData} from '@tanstack/react-query'
-import {useEffect} from 'react'
 import {useTranslation} from 'react-i18next'
 
 import {toast} from '@/components/ui/toast'
@@ -7,19 +6,16 @@ import {HOME_PATH} from '@/features/files/constants'
 import {useNavigate} from '@/features/files/hooks/use-navigate'
 import {useFilesStore} from '@/features/files/store/use-files-store'
 import {getFilesErrorMessage} from '@/features/files/utils/error-messages'
-import {useQueryParams} from '@/hooks/use-query-params'
 import {trpcReact} from '@/trpc/trpc'
 import type {RouterError} from '@/trpc/trpc'
 
 /**
  * Hook to manage external storage devices.
  * Provides functionality to fetch and eject external storage devices.
- * Also handles showing warning dialog for unsupported (Raspberry Pi) devices.
  */
 export function useExternalStorage() {
 	const {t} = useTranslation()
 	const utils = trpcReact.useUtils()
-	const {add} = useQueryParams()
 
 	const {data: isExternalStorageSupported = false} =
 		trpcReact.files.isExternalStorageSupported.useQuery()
@@ -31,7 +27,6 @@ export function useExternalStorage() {
 		{
 			onData() {
 				utils.files.externalDevices.invalidate()
-				utils.files.isExternalDeviceConnectedOnUnsupportedDevice.invalidate()
 			},
 			onError(err) {
 				console.error('eventBus.listen(files:external-storage:change) subscription error', err)
@@ -47,30 +42,7 @@ export function useExternalStorage() {
 		enabled: isExternalStorageSupported, // Only run query on supported devices
 	})
 
-	// Query to check for external drives on non-supported devices
-	const {data: hasExternalDriveOnUnsupportedDevice} =
-		trpcReact.files.isExternalDeviceConnectedOnUnsupportedDevice.useQuery(undefined, {
-			placeholderData: keepPreviousData,
-			refetchInterval: !isExternalStorageSupported ? 5000 : false, // Poll every 5 seconds because files:external-storage:change doesn't fire if a device is removed but all current devices have all their partitions mounted
-			staleTime: 0,
-			enabled: !isExternalStorageSupported, // Only run query on unsupported devices
-		})
-
 	const {currentPath, navigateToDirectory} = useNavigate()
-
-	// Show dialog when external drive detected on unsupported devices
-	useEffect(() => {
-		if (hasExternalDriveOnUnsupportedDevice) {
-			// Check if dialog has already been shown in this session
-			const dialogShown = sessionStorage.getItem('files-external-storage-unsupported-dialog-shown')
-
-			if (!dialogShown) {
-				add('dialog', 'files-external-storage-unsupported')
-				// Mark dialog as shown for this session
-				sessionStorage.setItem('files-external-storage-unsupported-dialog-shown', 'true')
-			}
-		}
-	}, [hasExternalDriveOnUnsupportedDevice, add])
 
 	// Eject disk mutation
 	// TODO: The externalDevices query has a 5s polling interval and a WebSocket subscription that
@@ -142,6 +114,5 @@ export function useExternalStorage() {
 		formatExternalStorageDevice,
 		isFormatting,
 		isExternalStorageSupported,
-		hasExternalDriveOnUnsupportedDevice,
 	}
 }

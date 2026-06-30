@@ -1254,5 +1254,7 @@
   "wifi-no-networks-message": "Nenašli sa žiadne Wi-Fi siete",
   "wifi-searching": "Vyhľadávajú sa Wi-Fi siete...",
   "wifi-unsupported-device-description": "Wi-Fi nie je na tomto zariadení podporované. Môže to byť spôsobené chýbajúcim alebo nekompatibilným bezdrôtovým adaptérom.",
-  "wifi-view-networks": "Zobraziť siete"
+  "wifi-view-networks": "Zobraziť siete",
+  "notifications.external-storage-power-fault.title": "External drive unmounted (power issue)",
+  "notifications.external-storage-power-fault.description": "Your Raspberry Pi reported low voltage or USB storage errors. External drives were unmounted to protect your data. Use a powered USB hub or a drive with its own power supply, then reconnect the drive."
 }

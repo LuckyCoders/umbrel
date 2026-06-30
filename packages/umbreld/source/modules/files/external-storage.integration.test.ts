@@ -337,7 +337,6 @@ describe('files.isExternalDeviceConnectedOnUnsupportedDevice', () => {
 	})
 
 	test('returns false when on Raspberry Pi but no external devices are connected', async () => {
-		// Set isRaspberryPi to return false
 		isRaspberryPiMockValue = true
 
 		// Mock lsblk to show no external USB devices
@@ -351,8 +350,7 @@ describe('files.isExternalDeviceConnectedOnUnsupportedDevice', () => {
 		expect(result).toBe(false)
 	})
 
-	test('returns true when on Raspberry Pi and external devices connected', async () => {
-		// Set isRaspberryPi to return false
+	test('returns false when on Raspberry Pi and external devices connected because Pi supports external storage', async () => {
 		isRaspberryPiMockValue = true
 
 		// Mock lsblk to show external USB devices and df to show system disk is not USB
@@ -361,13 +359,11 @@ describe('files.isExternalDeviceConnectedOnUnsupportedDevice', () => {
 			if (command.startsWith('df')) return {stdout: 'Filesystem\n/dev/nvme0n1p4'}
 		}
 
-		// Check the result
 		const result = await umbreld.client.files.isExternalDeviceConnectedOnUnsupportedDevice.query()
-		expect(result).toBe(true)
+		expect(result).toBe(false)
 	})
 
 	test('excludes external devices that contain the data directory (to avoid USB Pi false positives)', async () => {
-		// Set isRaspberryPi to return false
 		isRaspberryPiMockValue = true
 
 		// Mock lsblk to show external USB devices but df to show system disk is USB

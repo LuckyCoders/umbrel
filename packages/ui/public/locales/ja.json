@@ -1254,5 +1254,7 @@
   "wifi-no-networks-message": "Wi-Fiネットワークが見つかりません",
   "wifi-searching": "Wi-Fiネットワークを検索しています...",
   "wifi-unsupported-device-description": "このデバイスではWi-Fiがサポートされていません。これは、ワイヤレスアダプタがないか、互換性がないためです。",
-  "wifi-view-networks": "ネットワークを表示"
+  "wifi-view-networks": "ネットワークを表示",
+  "notifications.external-storage-power-fault.title": "External drive unmounted (power issue)",
+  "notifications.external-storage-power-fault.description": "Your Raspberry Pi reported low voltage or USB storage errors. External drives were unmounted to protect your data. Use a powered USB hub or a drive with its own power supply, then reconnect the drive."
 }

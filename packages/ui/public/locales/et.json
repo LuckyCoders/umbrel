@@ -1254,5 +1254,7 @@
   "wifi-no-networks-message": "Wi-Fi võrke ei leitud",
   "wifi-searching": "Otsin Wi-Fi võrke...",
   "wifi-unsupported-device-description": "Wi-Fi ei ole sellel seadmel toetatud. Põhjuseks võib olla puuduv või ühildumatu juhtmeta adapter.",
-  "wifi-view-networks": "Vaata võrke"
+  "wifi-view-networks": "Vaata võrke",
+  "notifications.external-storage-power-fault.title": "External drive unmounted (power issue)",
+  "notifications.external-storage-power-fault.description": "Your Raspberry Pi reported low voltage or USB storage errors. External drives were unmounted to protect your data. Use a powered USB hub or a drive with its own power supply, then reconnect the drive."
 }

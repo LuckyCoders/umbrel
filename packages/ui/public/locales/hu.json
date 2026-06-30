@@ -1254,5 +1254,7 @@
   "wifi-no-networks-message": "Nem található Wi-Fi hálózat",
   "wifi-searching": "Wi-Fi hálózatok keresése...",
   "wifi-unsupported-device-description": "Ez az eszköz nem támogatja a Wi-Fi-t. Ez hiányzó vagy inkompatibilis vezeték nélküli adapter miatt lehet.",
-  "wifi-view-networks": "Hálózatok megtekintése"
+  "wifi-view-networks": "Hálózatok megtekintése",
+  "notifications.external-storage-power-fault.title": "External drive unmounted (power issue)",
+  "notifications.external-storage-power-fault.description": "Your Raspberry Pi reported low voltage or USB storage errors. External drives were unmounted to protect your data. Use a powered USB hub or a drive with its own power supply, then reconnect the drive."
 }

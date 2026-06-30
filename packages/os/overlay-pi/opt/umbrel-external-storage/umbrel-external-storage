@@ -156,23 +156,20 @@ assert_safe_to_format () {
   partition_path="${2}"
   device_path="/dev/${block_device}"
 
-  if is_external_format_explicitly_allowed; then
-    echo "Explicit consent to format external storage detected, continuing..."
-    return 0
-  fi
-
   if device_has_filesystem_signatures "${device_path}"; then
     refuse_automatic_format "existing filesystem signatures detected on ${device_path}"
   fi
 
   fstype=$(get_partition_fstype "${partition_path}")
-  if [[ -n "${fstype}" && "${fstype}" != "ext4" ]]; then
-    refuse_automatic_format "partition ${partition_path} uses filesystem type '${fstype}'"
+  if [[ -n "${fstype}" ]]; then
+    refuse_automatic_format "partition ${partition_path} already uses filesystem type '${fstype}'"
   fi
 
-  if [[ "${fstype}" == "ext4" ]]; then
-    refuse_automatic_format "ext4 partition exists but is not a recognised Umbrel data drive"
+  if ! is_external_format_explicitly_allowed; then
+    refuse_automatic_format "explicit opt-in is required before formatting external storage"
   fi
+
+  echo "Explicit consent to format external storage detected and drive appears empty, continuing..."
 }
 
 # Wipes a block device and reformats it with a single EXT4 partition
