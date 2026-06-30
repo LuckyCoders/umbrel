@@ -13,6 +13,7 @@
 - **Umbrel stays on SD** — apps and data remain on the SD card even if an empty USB drive is attached
 - **External USB in Files** — drives mount under **Files → External** (ext4, exFAT, NTFS)
 - **Network WebDAV** — connect WebDAV servers (NAS, Nextcloud) via **Files → Network** using rclone
+- **Cloud storage** — connect **Dropbox** and **Google Drive** via **Files → Network** (rclone + OAuth)
 - **Power safety** — external drives are unmounted on undervoltage or USB I/O errors
 - **UAS blacklist** — improved USB stability on Raspberry Pi 4
 
