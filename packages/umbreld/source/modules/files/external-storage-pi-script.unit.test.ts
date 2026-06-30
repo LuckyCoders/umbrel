@@ -8,20 +8,22 @@ const externalStorageScriptPath = fileURLToPath(
 )
 
 describe('Pi external storage boot script', () => {
-	test('skips data-disk migration without explicit opt-in', async () => {
+	test('keeps Umbrel on the SD card when an external drive is present', async () => {
 		const script = await readFile(externalStorageScriptPath, 'utf8')
 
-		expect(script).toContain('umbrel-allow-external-format')
-		expect(script).toContain('is_external_format_explicitly_allowed')
-		expect(script).toContain('USB drives are mounted by umbreld under Files → External')
+		expect(script).toContain('Umbrel data stays on the SD card')
+		expect(script).toContain('External USB drives are not formatted at boot')
+		expect(script).toContain('mounted by umbreld under Files → External')
+		expect(script).not.toMatch(/\b(wipefs|parted|mkfs(?:\.ext4)?)\b/)
+		expect(script).not.toContain('setup_new_device')
+		expect(script).not.toContain('format_block_device')
 	})
 
-	test('refuses to format drives that already contain data', async () => {
+	test('does not auto-format external drives at boot', async () => {
 		const script = await readFile(externalStorageScriptPath, 'utf8')
 
-		expect(script).toContain('assert_safe_to_format')
-		expect(script).toContain('refuse_automatic_format')
-		expect(script).toContain('device_has_filesystem_signatures')
-		expect(script).toContain('explicit opt-in is required before formatting external storage')
+		expect(script).not.toContain('umbrel-allow-external-format')
+		expect(script).not.toContain('assert_safe_to_format')
+		expect(script).not.toMatch(/\b(wipefs|parted|mkfs(?:\.ext4)?)\b/)
 	})
 })
