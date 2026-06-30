@@ -1,3 +1,74 @@
+> [!IMPORTANT]
+> **LuckyCoders fork — not official umbrelOS**
+>
+> This repository is a community fork of [getumbrel/umbrel](https://github.com/getumbrel/umbrel). It is maintained in parallel with upstream while Pi external-storage fixes are not yet merged upstream. **Do not use Settings → Software Update** on a device running this build — that installs the official release and removes these changes.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### What we fixed (Raspberry Pi)
+
+- **No auto-format at boot** — a USB drive is never wiped when umbrelOS boots from SD
+- **Umbrel stays on SD** — apps and data remain on the SD card even if an empty USB drive is attached
+- **External USB in Files** — drives mount under **Files → External** (ext4, exFAT, NTFS)
+- **Power safety** — external drives are unmounted on undervoltage or USB I/O errors
+- **UAS blacklist** — improved USB stability on Raspberry Pi 4
+
+</td>
+<td width="50%" valign="top">
+
+### How this differs from upstream
+
+| Official umbrelOS | This fork |
+| --- | --- |
+| External storage disabled on Pi | Enabled in Files |
+| Boot script may format a blank USB | Boot script never formats USB |
+| Pi USB treated as unsupported in UI | Server-side support via API |
+
+</td>
+</tr>
+</table>
+
+### Install this fork on an existing Raspberry Pi 4
+
+**Prerequisite:** umbrelOS 1.7.x already running from SD (`bootFlow: rpi-tryboot`). Apps and data on the `data` partition are preserved.
+
+**1. Build or download `umbrelos-pi.update`**
+
+- **GitHub Actions:** [Build umbrelOS Pi](https://github.com/LuckyCoders/umbrel/actions/workflows/build-pi.yml) → **Run workflow** → download the artifact
+- **Or locally:** `cd packages/os && npm run build:pi` → `build/umbrelos-pi.update`
+
+**2. Copy to your Pi and install**
+
+```bash
+scp umbrelos-pi.update umbrel@<pi-ip>:/tmp/
+
+ssh umbrel@<pi-ip>
+sudo rugix-ctrl update install \
+  --reboot set \
+  --insecure-skip-bundle-verification \
+  /tmp/umbrelos-pi.update
+```
+
+**3. After reboot, if everything works**
+
+```bash
+sudo rugix-ctrl system commit
+```
+
+**4. Verify**
+
+```bash
+grep "Umbrel data stays on the SD card" /opt/umbrel-external-storage/umbrel-external-storage
+# Plug in a USB drive — it should appear in Files → External within ~10 seconds
+```
+
+> [!TIP]
+> Use a **powered USB hub** for hard drives on Pi 4. For future updates from this fork, repeat the `rugix-ctrl update install` steps with a new `umbrelos-pi.update` artifact — not the in-app updater.
+
+---
+
 [![umbrelOS](https://github.com/user-attachments/assets/cabf8af7-51ce-45df-ad3a-a664cc91c610)](https://umbrel.com/umbrelos)
 
 <p align="center">
