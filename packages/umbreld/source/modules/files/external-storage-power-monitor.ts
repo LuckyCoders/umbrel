@@ -29,7 +29,7 @@ export function startExternalStoragePowerMonitor(umbreld: Umbreld, externalStora
 		if (now - lastFaultHandledAt < FAULT_COOLDOWN_MS) return
 		lastFaultHandledAt = now
 
-		logger.warn(
+		logger.log(
 			`Raspberry Pi power fault detected (${powerFault}) with external USB storage mounted; unmounting drives`,
 		)
 
