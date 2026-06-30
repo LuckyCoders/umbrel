@@ -1,0 +1,95 @@
+name: Build umbrelOS Pi
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version label (used in the update bundle metadata)
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
+      - 'pi-*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-pi-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-pi:
+    name: Build Pi image and OTA bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    defaults:
+      run:
+        working-directory: packages/os
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Expose GitHub Actions cache for Docker
+        uses: crazy-max/ghaction-github-runtime@3cb05d89e1f492524af3d41a1c98c83bc3025124 # v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve build version
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="$(git rev-parse --short HEAD)-$(date +%s)"
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "Building umbrelOS Pi as ${VERSION}"
+
+      - name: Build Pi artifacts
+        env:
+          GITHUB_ACTIONS: 'true'
+          SKIP_AMD64: 'true'
+          SKIP_ARM64: 'true'
+          SKIP_MENDER_ARTIFACTS: 'true'
+        run: ./build.sh "${{ env.VERSION }}"
+
+      - name: List build outputs
+        run: ls -lh build/
+
+      - name: Create SHA256 checksums
+        run: |
+          cd build
+          shasum -a 256 umbrelos-pi.update umbrelos-pi4.img > SHA256SUMS-pi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: umbrelos-pi-${{ env.VERSION }}
+          path: |
+            packages/os/build/umbrelos-pi.update
+            packages/os/build/umbrelos-pi4.img
+            packages/os/build/SHA256SUMS-pi
+          retention-days: 90
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: umbrelOS Pi ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: true
+          files: |
+            packages/os/build/umbrelos-pi.update
+            packages/os/build/umbrelos-pi4.img
+            packages/os/build/SHA256SUMS-pi
